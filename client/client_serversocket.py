@@ -3,9 +3,15 @@ import sys
 from time import sleep
 import os
 from os import path
+# import tqdm
 
 def get_string_between(str, sep1, sep2):
-    return str.split(sep1)[1].split(sep2)[0]
+    result = ""
+    try:
+        result = str.split(sep1)[1].split(sep2)[0]
+    except:
+        None
+    return result
 
 BUFFER_SIZE = 1024*4
 HOST = "127.0.0.1"
@@ -29,7 +35,7 @@ try:
         if message.split(" ")[0] == "unduh":
             # check the confirmation is the file exist
             if received_data == "CONFIRMATION::FILE_EXIST\n":
-                #read the header message
+                # read the header message
                 received_header = client_socket.recv(BUFFER_SIZE).decode('utf-8')
                 recv_filename = get_string_between(received_header, "file-name: ", "\n")
                 recv_filesize = int(get_string_between(received_header, "file-size: ", "\n"))
@@ -42,37 +48,36 @@ try:
                     None
 
                 #read the file content
+                #setup the progress bar
+                total_data_recv = 0
                 with open(recv_filename, "wb") as f:
                     while True:
-                        # read 1024 bytes from the socket (receive)
-                        print("reading bytes ...")
+                        # read %BUFFER_SIZE% bytes from the socket (receive)
                         bytes_read = client_socket.recv(BUFFER_SIZE)
-                        # try encode using utf-8
-                        try:
-                            bytes_utf8 = bytes_read.decode('utf-8')
-                            if bytes_utf8 == "CONFIRMATION::FILE_TRANSFER_DONE\n":
-                                print("File transfer done ~")
-                                break
-                        except:
-                            None
+                        # print(bytes_read)
 
-                        print(bytes_read)
                         if not bytes_read:    
                             # nothing is received
                             # file transmitting is done
-                            print("File transfer done ~")
                             break
                         # write to the file the bytes we just received
                         f.write(bytes_read)
-                        print("write to file is done")
+                        total_data_recv += len(bytes_read)
+                        #update the progress status
+                        print(f"[!] File transfer {recv_filename} : {total_data_recv}B/{recv_filesize}B ({(total_data_recv/recv_filesize)*100}%)                 \r", end="")
+
                         # check is the file transfer completed
                         if path.getsize(recv_filename) == recv_filesize:
-                            print("File transfer done ~")
+                            sys.stdout.write("\n[!] File transfer done ~\n[SEND] >> ")
                             break
-
-                None
             else:
                 sys.stdout.write(f"[RECV] << {received_data}[SEND] >> ")
+        #special handling for exit
+        elif f"{message.rstrip()} ".split(" ")[0] == "exit":
+            client_socket.send(bytes("REQUEST::DISCONNECT", 'utf-8'))
+            client_socket.close()
+            sys.stdout.write(f"[!] Bye")
+            break
         else:
             sys.stdout.write(f"[RECV] << {received_data}[SEND] >> ")
 
