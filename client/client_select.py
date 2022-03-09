@@ -14,8 +14,8 @@ def get_string_between(str, sep1, sep2):
     return result
 
 BUFFER_SIZE = 1024*4
-HOST = "127.0.0.1"
-PORT = 5000
+HOST = sys.argv[1]
+PORT = int(sys.argv[2])
 
 server_address = (HOST, PORT)
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -36,7 +36,9 @@ try:
             # check the confirmation is the file exist
             if received_data == "CONFIRMATION::FILE_EXIST\n":
                 # read the header message
-                received_header = client_socket.recv(BUFFER_SIZE).decode('utf-8')
+                received_header = client_socket.recv(BUFFER_SIZE)
+                print(f"received_header : [{received_header}]")
+                received_header = received_header.decode('utf-8')
                 recv_filename = get_string_between(received_header, "file-name: ", "\n")
                 recv_filesize = int(get_string_between(received_header, "file-size: ", "\n"))
                 

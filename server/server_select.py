@@ -5,8 +5,11 @@ import os
 from os import path
 
 BUFFER_SIZE = 1024*4
+HOST = "192.168.167.3"
+PORT = 5000
 
-server_address = ('127.0.0.1', 5000)
+server_address = (HOST, PORT)
+print(f"[+] Listening from {HOST}:{PORT}")
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 server_socket.bind(server_address)
@@ -39,6 +42,10 @@ try:
                         # initiate headers
                         header = f"file-name: {filename}\n"
                         header += f"file-size: {filesize}\n\n\n"
+
+                        while(len(bytes(header, 'utf-8')) < 2920):
+                            header += "\n"
+                        
                         sock.send(bytes(header, 'utf-8'))
 
                         # start sending the file

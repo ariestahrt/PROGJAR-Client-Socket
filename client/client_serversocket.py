@@ -14,8 +14,8 @@ def get_string_between(str, sep1, sep2):
     return result
 
 BUFFER_SIZE = 1024*4
-HOST = "127.0.0.1"
-PORT = 5000
+HOST = sys.argv[1]
+PORT = int(sys.argv[2])
 
 server_address = (HOST, PORT)
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -48,7 +48,7 @@ try:
                     None
 
                 #read the file content
-                #setup the progress bar
+                #setup the progress bar 
                 total_data_recv = 0
                 with open(recv_filename, "wb") as f:
                     while True:
